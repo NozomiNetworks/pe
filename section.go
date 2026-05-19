@@ -410,7 +410,7 @@ func (section *Section) Contains(rva uint32, pe *File) bool {
 
 	var size uint32
 	adjustedPointer := pe.adjustFileAlignment(section.Header.PointerToRawData)
-	if pe.size-adjustedPointer < section.Header.SizeOfRawData {
+	if adjustedPointer >= pe.size || pe.size-adjustedPointer < section.Header.SizeOfRawData {
 		size = section.Header.VirtualSize
 	} else {
 		size = Max(section.Header.SizeOfRawData, section.Header.VirtualSize)

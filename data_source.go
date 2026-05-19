@@ -45,6 +45,9 @@ func (b *bufferData) readerAt() io.ReaderAt { return &byteReaderAt{b.buf} }
 type byteReaderAt struct{ buf []byte }
 
 func (r *byteReaderAt) ReadAt(p []byte, off int64) (int, error) {
+	if len(p) == 0 {
+		return 0, nil
+	}
 	if off < 0 || off >= int64(len(r.buf)) {
 		return 0, io.EOF
 	}

@@ -147,6 +147,7 @@ func TestNewFileNoMmap(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Open file(%s) failed", tt.in)
 			}
+			defer file.Close()
 
 			pefile, err := NewFileNoMmap(file, &Options{})
 			if err != nil {
@@ -158,11 +159,13 @@ func TestNewFileNoMmap(t *testing.T) {
 				t.Fatalf("Parse(%s) failed: %v", tt.in, err)
 			}
 
-			// While the parser is active, a second handle to the same file
-			// must be openable (no exclusive mmap lock is held).
-			file2, err2 := os.Open(tt.in)
+			// While the parser is active, a second handle opened for writing
+			// must succeed. On Windows an mmap-backed parser holds an exclusive
+			// section object that prevents write access; NewFileNoMmap must not
+			// acquire such a lock.
+			file2, err2 := os.OpenFile(tt.in, os.O_RDWR, 0)
 			if err2 != nil {
-				t.Fatalf("Second Open(%s) while parser active failed: %v", tt.in, err2)
+				t.Fatalf("Second Open (O_RDWR) of %s while parser active failed: %v", tt.in, err2)
 			}
 			_ = file2.Close()
 

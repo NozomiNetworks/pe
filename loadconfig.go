@@ -797,9 +797,11 @@ func (pe *File) parseLoadConfigDirectory(rva, size uint32) error {
 		}
 		loadCfg32 := ImageLoadConfigDirectory32{}
 		imgLoadConfigDirectory := make([]byte, binary.Size(loadCfg32))
-		if src, err2 := pe.src.slice(fileOffset, structSize); err2 == nil {
-			copy(imgLoadConfigDirectory, src)
+		src, err2 := pe.src.slice(fileOffset, structSize)
+		if err2 != nil {
+			return err2
 		}
+		copy(imgLoadConfigDirectory, src)
 		buf := bytes.NewReader(imgLoadConfigDirectory)
 		err = binary.Read(buf, binary.LittleEndian, &loadCfg32)
 		loadCfg = loadCfg32
@@ -810,9 +812,11 @@ func (pe *File) parseLoadConfigDirectory(rva, size uint32) error {
 		}
 		loadCfg64 := ImageLoadConfigDirectory64{}
 		imgLoadConfigDirectory := make([]byte, binary.Size(loadCfg64))
-		if src, err2 := pe.src.slice(fileOffset, structSize); err2 == nil {
-			copy(imgLoadConfigDirectory, src)
+		src, err2 := pe.src.slice(fileOffset, structSize)
+		if err2 != nil {
+			return err2
 		}
+		copy(imgLoadConfigDirectory, src)
 		buf := bytes.NewReader(imgLoadConfigDirectory)
 		err = binary.Read(buf, binary.LittleEndian, &loadCfg64)
 		loadCfg = loadCfg64
@@ -1152,9 +1156,12 @@ func (pe *File) getHybridPE() *HybridPE {
 	}
 
 	imgCHPEMeta := make([]byte, binary.Size(imgCHPEMetaX86))
-	if src, err2 := pe.src.slice(fileOffset, structSize); err2 == nil {
-		copy(imgCHPEMeta, src)
+	src, err2 := pe.src.slice(fileOffset, structSize)
+	if err2 != nil {
+		pe.logger.Debug("encountered an error while reading image CHPE Meta")
+		return nil
 	}
+	copy(imgCHPEMeta, src)
 	buf := bytes.NewReader(imgCHPEMeta)
 	err = binary.Read(buf, binary.LittleEndian, &imgCHPEMetaX86)
 	if err != nil {

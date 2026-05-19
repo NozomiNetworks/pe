@@ -64,7 +64,7 @@ func (pe *File) ParseRichHeader() error {
 	ntHeaderOffset := pe.DOSHeader.AddressOfNewEXEHeader
 	dosArea, err := pe.src.slice(0, ntHeaderOffset)
 	if err != nil {
-		return nil
+		return err
 	}
 	richSigOffset := bytes.Index(dosArea, []byte(RichSignature))
 

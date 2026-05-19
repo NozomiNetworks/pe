@@ -178,6 +178,7 @@ func NewFile(f *os.File, opts *Options) (*File, error) {
 func NewFileNoMmap(f *os.File, opts *Options) (*File, error) {
 	fi, err := f.Stat()
 	if err != nil {
+		_ = f.Close()
 		return nil, err
 	}
 

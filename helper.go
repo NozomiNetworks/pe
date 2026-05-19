@@ -644,7 +644,7 @@ func (pe *File) ReadUint64(offset uint32) (uint64, error) {
 
 // ReadUint32 read a uint32 from a buffer.
 func (pe *File) ReadUint32(offset uint32) (uint32, error) {
-	if offset > pe.size-4 {
+	if offset+4 > pe.size {
 		return 0, ErrOutsideBoundary
 	}
 	b, err := pe.src.slice(offset, 4)
@@ -656,7 +656,7 @@ func (pe *File) ReadUint32(offset uint32) (uint32, error) {
 
 // ReadUint16 read a uint16 from a buffer.
 func (pe *File) ReadUint16(offset uint32) (uint16, error) {
-	if offset > pe.size-2 {
+	if offset+2 > pe.size {
 		return 0, ErrOutsideBoundary
 	}
 	b, err := pe.src.slice(offset, 2)

@@ -359,13 +359,20 @@ func (pe *File) ParseSectionHeader() (err error) {
 		lowestSectionOffset = 0
 	}
 
+	var errSlice error
 	if lowestSectionOffset == 0 || lowestSectionOffset < offset {
 		if offset <= pe.size {
-			pe.Header = pe.data[:offset]
+			pe.Header, errSlice = pe.src.slice(0, offset)
+			if errSlice != nil {
+				return errSlice
+			}
 		}
 	} else {
 		if lowestSectionOffset <= pe.size {
-			pe.Header = pe.data[:lowestSectionOffset]
+			pe.Header, errSlice = pe.src.slice(0, lowestSectionOffset)
+			if errSlice != nil {
+				return errSlice
+			}
 		}
 	}
 
@@ -403,7 +410,7 @@ func (section *Section) Contains(rva uint32, pe *File) bool {
 
 	var size uint32
 	adjustedPointer := pe.adjustFileAlignment(section.Header.PointerToRawData)
-	if uint32(len(pe.data))-adjustedPointer < section.Header.SizeOfRawData {
+	if adjustedPointer >= pe.size || pe.size-adjustedPointer < section.Header.SizeOfRawData {
 		size = section.Header.VirtualSize
 	} else {
 		size = Max(section.Header.SizeOfRawData, section.Header.VirtualSize)
@@ -460,7 +467,11 @@ func (section *Section) Data(start, length uint32, pe *File) []byte {
 		end = pe.size
 	}
 
-	return pe.data[offset:end]
+	b, err := pe.src.slice(offset, end-offset)
+	if err != nil {
+		return nil
+	}
+	return b
 }
 
 // CalculateEntropy calculates section entropy.

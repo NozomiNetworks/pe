@@ -139,3 +139,40 @@ func TestCanParseWithHandleAndClose(t *testing.T) {
 		})
 	}
 }
+
+func TestNewFileNoMmap(t *testing.T) {
+	for _, tt := range peTests {
+		t.Run(tt.in, func(t *testing.T) {
+			file, err := os.Open(tt.in)
+			if err != nil {
+				t.Fatalf("Open file(%s) failed", tt.in)
+			}
+			defer file.Close()
+
+			pefile, err := NewFileNoMmap(file, &Options{})
+			if err != nil {
+				t.Fatalf("NewFileNoMmap(%s) failed: %v", tt.in, err)
+			}
+
+			err = pefile.Parse()
+			if err != nil {
+				t.Fatalf("Parse(%s) failed: %v", tt.in, err)
+			}
+
+			// While the parser is active, a second handle opened for writing
+			// must succeed. On Windows an mmap-backed parser holds an exclusive
+			// section object that prevents write access; NewFileNoMmap must not
+			// acquire such a lock.
+			file2, err2 := os.OpenFile(tt.in, os.O_RDWR, 0)
+			if err2 != nil {
+				t.Fatalf("Second Open (O_RDWR) of %s while parser active failed: %v", tt.in, err2)
+			}
+			_ = file2.Close()
+
+			err = pefile.Close()
+			if err != nil {
+				t.Fatalf("Close(%s) failed: %v", tt.in, err)
+			}
+		})
+	}
+}

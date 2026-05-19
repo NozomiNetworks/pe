@@ -612,8 +612,11 @@ func (pe *File) parseCLRHeaderDirectory(rva, size uint32) error {
 
 		// Some malformed/Corrupt PEs has invalid sizes on sh.
 		mdStreamBytes := make([]byte, 0)
-		if start+sh.Size <= uint32(len(pe.data)) {
-			mdStreamBytes = pe.data[start : start+sh.Size]
+		if start+sh.Size <= pe.size {
+			mdStreamBytes, err = pe.src.slice(start, sh.Size)
+			if err != nil {
+				return err
+			}
 		}
 
 		// Save the stream into a map <string> []byte.
@@ -666,9 +669,9 @@ func (pe *File) parseCLRHeaderDirectory(rva, size uint32) error {
 		}
 
 		// Skip tables that have a unreasonable size
-		if uint64(table.CountCols) * 4 > uint64(len(pe.data)){
+		if uint64(table.CountCols)*4 > uint64(pe.size) {
 			pe.logger.Warnf("Table %s has %d rows, which is not realistic considering PE file's size. Skipping it.", table.Name, table.CountCols)
-            continue
+			continue
 		}
 
 		n := uint32(0)

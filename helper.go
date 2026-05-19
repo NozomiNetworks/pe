@@ -593,7 +593,10 @@ func (pe *File) Checksum() uint32 {
 	// Build a DWORD-aligned view without mutating the underlying data.
 	remainder := pe.size % 4
 	dataLen := pe.size
-	rawData, _ := pe.src.slice(0, pe.size)
+	rawData, err := pe.src.slice(0, pe.size)
+	if err != nil {
+		return 0
+	}
 	paddedData := rawData
 	if remainder > 0 {
 		dataLen = pe.size + (4 - remainder)

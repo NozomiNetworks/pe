@@ -436,7 +436,11 @@ func (pe *File) parseDebugDirectory(rva, size uint32) error {
 					}
 					offset += 4
 
-					nameSrc, _ := pe.src.slice(offset, 64)
+					var nameSrc []byte
+					nameSrc, err = pe.src.slice(offset, 64)
+					if err != nil {
+						break
+					}
 					pogoEntry.Name = string(pe.GetStringFromData(0, nameSrc))
 
 					pogo.Entries = append(pogo.Entries, pogoEntry)

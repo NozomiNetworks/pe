@@ -359,13 +359,20 @@ func (pe *File) ParseSectionHeader() (err error) {
 		lowestSectionOffset = 0
 	}
 
+	var errSlice error
 	if lowestSectionOffset == 0 || lowestSectionOffset < offset {
 		if offset <= pe.size {
-			pe.Header, _ = pe.src.slice(0, offset)
+			pe.Header, errSlice = pe.src.slice(0, offset)
+			if errSlice != nil {
+				return errSlice
+			}
 		}
 	} else {
 		if lowestSectionOffset <= pe.size {
-			pe.Header, _ = pe.src.slice(0, lowestSectionOffset)
+			pe.Header, errSlice = pe.src.slice(0, lowestSectionOffset)
+			if errSlice != nil {
+				return errSlice
+			}
 		}
 	}
 
@@ -460,7 +467,10 @@ func (section *Section) Data(start, length uint32, pe *File) []byte {
 		end = pe.size
 	}
 
-	b, _ := pe.src.slice(offset, end-offset)
+	b, err := pe.src.slice(offset, end-offset)
+	if err != nil {
+		return nil
+	}
 	return b
 }
 

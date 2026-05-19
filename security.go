@@ -369,7 +369,10 @@ func (pe *File) parseSecurityDirectory(rva, size uint32) error {
 
 	pe.HasCertificate = true
 	pe.Certificates.Header = certHeader
-	pe.Certificates.Raw, _ = pe.src.slice(fileOffset+certSize, certHeader.Length-uint32(certSize))
+	pe.Certificates.Raw, err = pe.src.slice(fileOffset+certSize, certHeader.Length-uint32(certSize))
+	if err != nil {
+		return err
+	}
 
 	certContent := pe.Certificates.Raw
 	for {

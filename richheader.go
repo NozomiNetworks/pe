@@ -114,7 +114,10 @@ func (pe *File) ParseRichHeader() error {
 	}
 
 	rh.DansOffset = dansSigOffset
-	rh.Raw, _ = pe.src.slice(uint32(dansSigOffset), uint32(richSigOffset+8-dansSigOffset))
+	rh.Raw, err = pe.src.slice(uint32(dansSigOffset), uint32(richSigOffset+8-dansSigOffset))
+	if err != nil {
+		return err
+	}
 
 	// Reverse the decrypted rich header
 	for i, j := 0, len(decRichHeader)-1; i < j; i, j = i+1, j-1 {

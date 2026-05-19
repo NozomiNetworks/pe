@@ -613,7 +613,10 @@ func (pe *File) parseCLRHeaderDirectory(rva, size uint32) error {
 		// Some malformed/Corrupt PEs has invalid sizes on sh.
 		mdStreamBytes := make([]byte, 0)
 		if start+sh.Size <= pe.size {
-			mdStreamBytes, _ = pe.src.slice(start, sh.Size)
+			mdStreamBytes, err = pe.src.slice(start, sh.Size)
+			if err != nil {
+				return err
+			}
 		}
 
 		// Save the stream into a map <string> []byte.

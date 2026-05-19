@@ -384,12 +384,18 @@ func (pe *File) parseUnwindCode(offset uint32, version uint8) (UnwindCode, int) 
 		advanceBy++
 	case UwOpAllocLarge:
 		if unwindCode.OpInfo == 0 {
-			v16, _ := pe.ReadUint16(offset + 2)
+			v16, err := pe.ReadUint16(offset + 2)
+			if err != nil {
+				return unwindCode, advanceBy
+			}
 			size := int(v16 * 8)
 			unwindCode.Operand = "Size=" + strconv.Itoa(size)
 			advanceBy += 2
 		} else {
-			v32, _ := pe.ReadUint32(offset + 2)
+			v32, err := pe.ReadUint32(offset + 2)
+			if err != nil {
+				return unwindCode, advanceBy
+			}
 			size := int(v32 << 16)
 			unwindCode.Operand = "Size=" + strconv.Itoa(size)
 			advanceBy += 3
@@ -401,25 +407,37 @@ func (pe *File) parseUnwindCode(offset uint32, version uint8) (UnwindCode, int) 
 		unwindCode.Operand = "Register=" + OpInfoRegisters[unwindCode.OpInfo]
 		advanceBy++
 	case UwOpSaveNonVol:
-		fo, _ := pe.ReadUint16(offset + 2)
+		fo, err := pe.ReadUint16(offset + 2)
+		if err != nil {
+			return unwindCode, advanceBy
+		}
 		unwindCode.FrameOffset = fo * 8
 		unwindCode.Operand = "Register=" + OpInfoRegisters[unwindCode.OpInfo] +
 			", Offset=" + strconv.Itoa(int(unwindCode.FrameOffset))
 		advanceBy += 2
 	case UwOpSaveNonVolFar:
-		v32, _ := pe.ReadUint32(offset + 2)
+		v32, err := pe.ReadUint32(offset + 2)
+		if err != nil {
+			return unwindCode, advanceBy
+		}
 		unwindCode.FrameOffset = uint16(v32 * 8)
 		unwindCode.Operand = "Register=" + OpInfoRegisters[unwindCode.OpInfo] +
 			", Offset=" + strconv.Itoa(int(unwindCode.FrameOffset))
 		advanceBy += 3
 	case UwOpSaveXmm128:
-		fo, _ := pe.ReadUint16(offset + 2)
+		fo, err := pe.ReadUint16(offset + 2)
+		if err != nil {
+			return unwindCode, advanceBy
+		}
 		unwindCode.FrameOffset = fo * 16
 		unwindCode.Operand = "Register=XMM" + strconv.Itoa(int(unwindCode.OpInfo)) +
 			", Offset=" + strconv.Itoa(int(unwindCode.FrameOffset))
 		advanceBy += 2
 	case UwOpSaveXmm128Far:
-		v32, _ := pe.ReadUint32(offset + 2)
+		v32, err := pe.ReadUint32(offset + 2)
+		if err != nil {
+			return unwindCode, advanceBy
+		}
 		unwindCode.FrameOffset = uint16(v32)
 		unwindCode.Operand = "Register=XMM" + strconv.Itoa(int(unwindCode.OpInfo)) +
 			", Offset=" + strconv.Itoa(int(unwindCode.FrameOffset))
@@ -495,7 +513,10 @@ func (pe *File) parseUnwindInfo(unwindInfo uint32) UnwindInfo {
 	if ui.Flags&UnwFlagEHandler != 0 || ui.Flags&UnwFlagUHandler != 0 {
 		if ui.Flags&UnwFlagChainInfo == 0 {
 			handlerOffset := offset + 2*uint32(i)
-			ui.ExceptionHandler, _ = pe.ReadUint32(handlerOffset)
+			ui.ExceptionHandler, err = pe.ReadUint32(handlerOffset)
+			if err != nil {
+				return ui
+			}
 		}
 	}
 

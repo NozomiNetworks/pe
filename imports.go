@@ -690,7 +690,10 @@ func (pe *File) parseImports64(importDesc interface{}, maxLen uint32) ([]ImportF
 
 				hintNameTableRva := table[idx].ImageThunkData.AddressOfData & addressMask64
 				off := pe.GetOffsetFromRva(uint32(hintNameTableRva))
-				imp.Hint, _ = pe.ReadUint16(off)
+				imp.Hint, err = pe.ReadUint16(off)
+				if err != nil {
+					imp.Hint = ^uint16(0)
+				}
 				imp.Name = pe.getStringAtRVA(uint32(table[idx].ImageThunkData.AddressOfData+2),
 					maxImportNameLength)
 				if !IsValidFunctionName(imp.Name) {

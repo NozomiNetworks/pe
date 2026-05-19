@@ -83,7 +83,10 @@ func (pe *File) ParseRichHeader() error {
 	// have been decrypted, but doesn't match the stored key, it can be assumed
 	// the structure had been tampered with. For those that go the extra step to
 	// recalculate the checksum/key, this simple protection mechanism can be bypassed.
-	rh.XORKey, _ = pe.ReadUint32(uint32(richSigOffset) + 4)
+	rh.XORKey, err = pe.ReadUint32(uint32(richSigOffset) + 4)
+	if err != nil {
+		return err
+	}
 
 	// To decrypt the array, start with the DWORD just prior to the `Rich` sequence
 	// and XOR it with the key. Continue the loop backwards, 4 bytes at a time,
@@ -92,7 +95,11 @@ func (pe *File) ParseRichHeader() error {
 	dansSigOffset := -1
 	estimatedBeginDans := richSigOffset - 4 - binary.Size(ImageDOSHeader{})
 	for it := 0; it < estimatedBeginDans; it += 4 {
-		buff, _ := pe.ReadUint32(uint32(richSigOffset - 4 - it))
+		var buff uint32
+		buff, err = pe.ReadUint32(uint32(richSigOffset - 4 - it))
+		if err != nil {
+			break
+		}
 		res := buff ^ rh.XORKey
 		if res == DansSignature {
 			dansSigOffset = richSigOffset - it - 4
@@ -182,7 +189,10 @@ func (pe *File) RichHeaderChecksum() uint32 {
 		if i >= 0x3C && i < 0x40 {
 			continue
 		}
-		bv, _ := pe.ReadUint8(uint32(i))
+		bv, err := pe.ReadUint8(uint32(i))
+		if err != nil {
+			return 0
+		}
 		b := uint32(bv)
 		checksum += ((b << (i % 32)) | (b>>(32-(i%32)))&0xff)
 		checksum &= 0xFFFFFFFF
